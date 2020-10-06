@@ -1,6 +1,6 @@
 # 启动退出演示
 # kubectl apply -f start-quit.yaml
-# kubectl exec -it 
+# kubectl delete -f start-quit.yaml
 apiVersion: v1
 kind: Pod
 metadata:  
