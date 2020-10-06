@@ -1,0 +1,25 @@
+# 检测探针 - 就绪检测
+# kubectl apply -f readinessProbe-httpget.yaml
+# kubectl get pod readiness-httpget-pod
+# kubectl exec -it readiness-httpget-pod -- /bin/sh
+# cd /usr/share/nginx/html
+# echo "123" >> index1.html
+# exit
+# kubectl get pod readiness-httpget-pod
+# kubectl delete -f readinessProbe-httpget.yaml
+apiVersion: v1
+kind: Pod
+metadata:  
+  name: readiness-httpget-pod  
+  namespace: default
+spec:  
+  containers:  
+    - name: readiness-httpget-container    
+      image: wangyanglinux/myapp:v1    
+      imagePullPolicy: IfNotPresent    
+      readinessProbe:      
+        httpGet:        
+          port: 80        
+          path: /index1.html      
+        initialDelaySeconds: 1      
+        periodSeconds: 3

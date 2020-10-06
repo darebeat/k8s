@@ -1,0 +1,18 @@
+# 存活检测
+# kubectl apply -f livenessProbe-tcp.yaml
+# kubectl get pod probe-tcp -w
+# kubectl delete -f livenessProbe-tcp.yaml
+apiVersion: v1
+kind: Pod
+metadata:  
+  name: probe-tcp
+spec:  
+  containers:  
+    - name: nginx    
+      image: nginx    
+      livenessProbe:      
+        initialDelaySeconds: 5  
+        periodSeconds: 3     
+        timeoutSeconds: 1      
+        tcpSocket:        
+          port: 8080

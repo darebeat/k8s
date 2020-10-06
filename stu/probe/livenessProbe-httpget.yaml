@@ -1,0 +1,30 @@
+# 存活检测
+# kubectl apply -f livenessProbe-httpget.yaml
+# kubectl get pod liveness-httpget-pod -w
+# kubectl get pod liveness-httpget-pod -o wide
+# curl localhost
+# kubectl exec -it liveness-httpget-pod -- /bin/sh
+# cd /usr/share/nginx/html
+# mv index.html index1.html
+# exit
+# kubectl delete -f livenessProbe-httpget.yaml
+apiVersion: v1
+kind: Pod
+metadata:  
+  name: liveness-httpget-pod  
+  namespace: default
+spec:
+  containers:  
+    - name: liveness-httpget-container    
+      image: nginx   
+      imagePullPolicy: IfNotPresent    
+      ports:    
+        - name: http      
+          containerPort: 80    
+      livenessProbe:      
+        httpGet:        
+          port: http        
+          path: /index.html      
+        initialDelaySeconds: 1      
+        periodSeconds: 3      
+        timeoutSeconds: 10

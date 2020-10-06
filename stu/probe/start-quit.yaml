@@ -1,0 +1,18 @@
+# 启动退出演示
+# kubectl apply -f start-quit.yaml
+# kubectl exec -it 
+apiVersion: v1
+kind: Pod
+metadata:  
+  name: lifecycle-demo
+spec:  
+  containers:  
+    - name: lifecycle-demo-container    
+      image: nginx    
+      lifecycle:      
+        postStart:        
+          exec:          
+            command: ["/bin/sh", "-c", "echo Hello from the post Start handler >/usr/share/message"]      
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "echo Hello from the post Stop handler >/usr/share/message"]
