@@ -1,0 +1,63 @@
+## Cron Job
+# 管理基于时间的 Job，即：
+# 1. 在给定时间点只运行一次
+# 2. 周期性地在给定时间点运行
+
+## 使用条件：
+# 当前使用的 Kubernetes 集群，版本 >= 1.8（对 CronJob）
+
+## 典型的用法：
+# 1. 在给定的时间点调度 Job 运行
+# 2. 创建周期性运行的 Job，例如：数据库备份、发送邮件
+
+## CronJob Spec
+# 1. .spec.schedule：调度，必需字段，指定任务运行周期，格式同 Cron
+# 2. .spec.jobTemplate：Job 模板，必需字段，指定需要运行的任务，格式同 Job
+# 3. .spec.startingDeadlineSeconds：启动 Job 的期限（秒级别），该字段是可选的
+#    如果因为任何原因而错过了被调度的时间，那么错过执行时间的 Job 将被认为是失败的
+#    如果没有指定，则没有期限
+# 4. .spec.concurrencyPolicy：并发策略，该字段也是可选的
+#    它指定了如何处理被 Cron Job 创建的 Job 的并发执行
+#    只允许指定下面策略中的一种：
+#      a. Allow（默认）：允许并发运行Job
+#      b. Forbid：禁止并发运行，如果前一个还没有完成，则直接跳过下一个
+#      c. Replace：取消当前正在运行的 Job，用一个新的来替换
+#    注意: 当前策略只能应用于同一个 Cron Job 创建的 Job
+#         如果存在多个 Cron Job，它们创建的 Job 之间总是允许并发运行
+# 5. .spec.suspend：挂起，该字段也是可选的
+#    如果设置为true，后续所有执行都会被挂起
+#    它对已经开始执行的 Job 不起作用,默认值为false
+# 6. .spec.successfulJobsHistoryLimit和.spec.failedJobsHistoryLimit：历史限制，是可选的字段
+#    它们指定了可以保留多少完成和失败的 Job
+#    默认情况下，它们分别设置为3和1,设置限制的值为0，相关类型的 Job 完成后将不会被保留
+
+## 常用命令
+# kubectl apply -f cronjob.yaml
+# kubectl get pod
+# kubectl describe pod cronjob-example-xxxxx
+# kubectl get cronjob
+# kubectl get job -w
+# kubectl logs `kubectl get pod | grep cronjob | awk 'NR==1{print $1}'`
+# kubectl delete cronjob cronjob-example
+# kubectl delete -f cronjob.yaml
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:  
+  name: cronjob-example
+spec:  
+  schedule: "*/1 * * * *"  
+  jobTemplate:    
+    spec:      
+      template:        
+        spec:
+          containers:          
+          - name: cronjob-example            
+            image: busybox            
+            args:            
+            - /bin/sh            
+            - -c            
+            - date "+%Y-%m-%d %H:%M:%S"; echo I\'m CronJob from K8S Cluster          
+          restartPolicy: OnFailure
+
+

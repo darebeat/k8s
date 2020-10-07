@@ -1,0 +1,37 @@
+## ReplicationController/RC
+# 主要的作用就是用来确保容器应用的副本数始终保持在用户定义的副本数。
+# 即如果有容器异常退出，会自动创建新的Pod来替代；
+# 而如果异常多出来的容器也会自动回收
+
+## ReplicaSet 
+# RS 跟 RC 没有本质的不同，只是名字不一样，但RS支持集合式的(label) selector
+# v1.11版本之后,官方建议使用 RS替代进行部署
+
+# kubectl create -f rs.yaml
+# kubectl get pod --show-labels
+# kubectl delete pod --all
+# kubectl label pod frontend-62jlv tier=frontend1 --overwrite=true
+# kubectl delete -f rs.yaml
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:  
+  name: frontend
+spec:  
+  replicas: 3  
+  selector:    
+    matchLabels:      
+      tier: frontend  
+  template:    
+    metadata:      
+      labels:        
+        tier: frontend    
+    spec:      
+      containers:      
+      - name: myapp        
+        image: nginx        
+        env:        
+        - name: GET_HOSTS_FROM          
+          value: dns        
+        ports:        
+        - containerPort: 80

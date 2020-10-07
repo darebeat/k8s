@@ -1,0 +1,48 @@
+## Deployment 
+# 为 Pod 和 ReplicaSet 提供了一个声明式定义(declarative)方法
+# 用来替代以前的ReplicationController 来方便的管理应用
+
+## 典型的应用场景
+# 1. 定义Deployment来创建Pod和ReplicaSet
+# 2. 滚动升级和回滚应用
+# 3. 扩容和缩容
+# 4. 暂停和继续Deployment
+
+## 常用命令
+# kubectl apply -f deployment.yaml --record
+# kubectl describe deployments
+# kubectl scale deployment nginx-deployment --replicas=10 # 扩容
+# docker pull nginx:1.9.1
+# kubectl set image deployment/nginx-deployment nginx-deployment=nginx:1.9.1 ## 使用nginx:1.9.1的镜像来代替原来的nginx的镜像
+# kubectl rollout status deployment/nginx-deployment ## 查看 rollout 的状态
+# kubectl rollout history deployment/nginx-deployment
+# kubectl rollout undo deployment/nginx-deployment
+# kubectl rollout undo deployment/nginx-deployment --to-revision=2 ## 可以使用 --revision参数指定某个历史版本
+# kubectl rollout pause deployment/nginx-deployment    ## 暂停 deployment 的更新
+# kubectl get rs
+# kubectl delete -f deployment.yaml
+
+## 清理 Policy
+# 可以通过设置.spec.revisonHistoryLimit项来指定deployment最多保留多少revision历史记录。
+# 默认的会保留所有的 revision；如果将该项设置为0，Deployment 就不允许回退了
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  name: nginx-deployment
+spec:  
+  replicas: 3 
+  selector:
+    matchLabels:
+      app: nginx-deployment 
+
+  template:    
+    metadata:      
+      labels:        
+        app: nginx-deployment    
+    spec:      
+      containers:      
+        - name: nginx-deployment      
+          image: nginx       
+          ports:        
+            - containerPort: 80
