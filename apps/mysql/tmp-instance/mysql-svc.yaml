@@ -13,4 +13,4 @@ spec:
     name: http
     nodePort: 30006
   selector:
-    name: mysql-pod
+    name: mysql-tp

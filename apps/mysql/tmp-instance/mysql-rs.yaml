@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mysql-rs
+  labels:
+    name: mysql-tp
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mysql-tp
+  template:
+    metadata:
+      labels: 
+        name: mysql-tp
+    spec:
+      containers:
+      - name: mysql
+        image: mysql
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "mysql"
+        args: [ "--default-authentication-plugin=mysql_native_password","--character-set-server=utf8mb4","--collation-server=utf8mb4_general_ci" ]
+        
