@@ -1,7 +1,11 @@
 # README
 
+#### 部署 Ingress-Nginx
+
 ```sh
-wget https://github.com/kubernetes/ingress-nginx/blob/nginx-0.30.0/deploy/static/mandatory.yaml
+[kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx.git) 
+[mandatory.yaml](https://github.com/kubernetes/ingress-nginx/blob/nginx-0.30.0/deploy/static/mandatory.yaml)
+[service-nodeport.yaml](https://github.com/kubernetes/ingress-nginx/blob/nginx-0.30.0/deploy/static/provider/baremetal/service-nodeport.yaml)
 
 docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/nginx-ingress-controller:0.30.0
 

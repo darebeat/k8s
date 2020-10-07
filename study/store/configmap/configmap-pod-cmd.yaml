@@ -1,0 +1,36 @@
+## Pod 中使用 ConfigMap -- 2. 用 ConfigMap 设置命令行参数
+# kubectl apply -f configmap-pod-cmd.yaml
+# kubectl logs configmap-pod-cmd
+# kubectl delete -f configmap-pod-cmd.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:  
+  name: special-config  
+  namespace: default
+data:  
+  special.how: very  
+  special.type: charm
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:  
+  name: configmap-pod-cmd
+spec:  
+  containers:    
+    - name: test-container      
+      image: busybox      
+      command: ["/bin/sh","-c","echo $(SPECIAL_LEVEL_KEY) $(SPECIAL_TYPE_KEY)"]      
+      env:        
+        - name: SPECIAL_LEVEL_KEY          
+          valueFrom:            
+            configMapKeyRef:              
+              name: special-config              
+              key: special.how        
+        - name: SPECIAL_TYPE_KEY          
+          valueFrom:            
+            configMapKeyRef:              
+              name: special-config              
+              key: special.type  
+  restartPolicy: Never

@@ -1,0 +1,32 @@
+## Pod 中使用 ConfigMap -- 3. 通过数据卷插件使用ConfigMap
+# kubectl apply -f configmap-pod-volume.yaml
+# kubectl logs configmap-pod-volume
+# kubectl delete -f configmap-pod-volume.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:  
+  name: special-config  
+  namespace: default
+data:  
+  special.how: very  
+  special.type: charm
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:  
+  name: dapi-test-pod
+spec:  
+  containers:    
+    - name: test-container      
+      image: hub.atguigu.com/library/myapp:v1      
+      command: ["/bin/sh","-c","cat /etc/config/special.how"]      
+      volumeMounts:      
+        - name: config-volume        
+          mountPath: /etc/config  
+  volumes:    
+    - name: config-volume      
+      configMap:        
+        name: special-config
+  restartPolicy: Never

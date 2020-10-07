@@ -1,0 +1,45 @@
+## ConfigMap 的热更新
+# kubectl apply -f configmap-hot-update.yaml
+# kubectl exec -it `kubectl get pods -l run=my-nginx  -o=name|cut -d "/" -f2` -- cat /etc/config/log_level
+# kubectl edit configmap log-config # 修改log_level=DEBUG
+# kubectl delete -f configmap-hot-update.yaml
+
+## ConfigMap 更新后滚动更新 Pod
+# 更新 ConfigMap 目前并不会触发相关 Pod 的滚动更新，可以通过修改 pod annotations 的方式强制触发滚动更新
+# kubectl patch deployment my-nginx --patch '{"spec": {"template": {"metadata": {"annotations":{"version/config": "20201007" }}}}}'
+apiVersion: v1
+kind: ConfigMap
+metadata:  
+  name: log-config  
+  namespace: default
+data:  
+  log_level: INFO
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  name: my-nginx
+spec:  
+  replicas: 1 
+  selector:    
+    matchLabels: 
+      run: my-nginx 
+  template:
+    metadata:      
+      labels:        
+        run: my-nginx    
+    spec:      
+      containers:      
+      - name: my-nginx        
+        image: nginx       
+        ports:        
+        - containerPort: 80        
+        volumeMounts:        
+        - name: config-volume          
+          mountPath: /etc/config      
+      volumes:        
+        - name: config-volume          
+          configMap:            
+            name: log-config
