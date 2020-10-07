@@ -1,0 +1,17 @@
+## ExternalName
+# 这种类型的 Service 通过返回 CNAME 和它的值，
+# 可以将服务映射到 externalName 字段的内容( 例如：org.darebeat.com )
+# ExternalName Service 是 Service 的特例，它没有 selector，也没有定义任何的端口和Endpoint
+# 相反的，对于运行在集群外部的服务，它通过返回该外部服务的别名这种方式来提供服务当查询主机 
+# my-service.defalut.svc.cluster.local ( SVC_NAME.NAMESPACE.svc.cluster.local )时，
+# 集群的DNS 服务将返回一个值 my.database.example.com 的 CNAME 记录
+# 访问这个服务的工作方式和其他的相同，唯一不同的是重定向发生在 DNS 层，而且不会进行代理或转发
+
+kind: Service
+apiVersion: v1
+metadata:  
+  name: my-service  
+  namespace: default
+spec:  
+  type: ExternalName  
+  externalName: org.darebeat.com

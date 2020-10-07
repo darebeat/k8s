@@ -1,0 +1,82 @@
+## 获取登陆初始密码
+# kubectl exec -it `kubectl get pod | grep jenkins-server | awk '{print $1}'` -- sh
+# cat /var/jenkins_home/secrets/initialAdminPassword
+
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: task-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/jenkins"
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: task-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-server
+  labels:
+    app: jenkins-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-server
+  template:
+    metadata:
+      labels:
+        app: jenkins-server
+    spec:
+      containers:
+        - name: jenkins
+          image: jenkins/jenkins:lts
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: task-pv-storage
+              mountPath: "/tmp/jenkins"
+      volumes:
+        - name: task-pv-storage
+          persistentVolumeClaim:
+            claimName: task-pv-claim
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-server
+  namespace: default
+  labels:
+    app: jenkins-server
+spec:
+  ports:
+    - name: jenkins-port
+      protocol: TCP
+      port: 8080
+      nodePort: 31081
+  selector:
+    app: jenkins-server
+  type: NodePort

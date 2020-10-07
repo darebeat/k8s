@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  name: myapp-deploy  
+  namespace: default
+spec:  
+  replicas: 3  
+  selector:    
+    matchLabels:      
+      app: myapp      
+      release: stabel  
+  template:    
+    metadata:      
+      labels:        
+        app: myapp        
+        release: stabel        
+        env: test    
+    spec:      
+      containers:      
+        - name: myapp
+          image: nginx        
+          imagePullPolicy: IfNotPresent        
+          ports:        
+          - name: http          
+            containerPort: 80
+

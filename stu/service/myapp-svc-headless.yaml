@@ -1,0 +1,13 @@
+# Headless Service
+apiVersion: v1
+kind: Service
+metadata:  
+  name: myapp-headless  
+  namespace: default
+spec:  
+  selector:    
+    app: myapp  
+    clusterIP: "None"  
+  ports:  
+    - port: 80    
+      targetPort: 80
