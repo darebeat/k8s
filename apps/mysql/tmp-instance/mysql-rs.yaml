@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
   name: mysql-rs
+  namespace: tools
   labels:
     name: mysql-tp
     version: v1
