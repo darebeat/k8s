@@ -20,9 +20,15 @@ spec:
     spec:
       containers:
       - name: jobmanager
-        image: flink:1.9
-        args:
-        - jobmanager
+        image: flink:1.11.2-scala_2.11
+        command: # 解决官方版本不能够从Web UI 查看 Logs 以及Stdout
+        - bash
+        - -c
+        - "sed -i 's/start-foreground/start/g' /docker-entrypoint.sh && \
+        /docker-entrypoint.sh jobmanager && \
+        tail -f /docker-entrypoint.sh"
+        # args:
+        # - jobmanager
         ports:
         - containerPort: 6123
           name: rpc
@@ -60,9 +66,15 @@ spec:
     spec:
       containers:
       - name: taskmanager
-        image: flink:1.9
-        args:
-        - taskmanager
+        image: flink:1.11.2-scala_2.11
+        command: # 解决官方版本不能够从Web UI 查看 Logs 以及Stdout
+        - bash
+        - -c
+        - "sed -i 's/start-foreground/start/g' /docker-entrypoint.sh && \
+        /docker-entrypoint.sh taskmanager && \
+        tail -f /docker-entrypoint.sh"
+        # args:
+        # - taskmanager
         ports:
         - containerPort: 6121
           name: data
