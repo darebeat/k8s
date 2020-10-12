@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: edge-client
+  namespace: tools
+  labels: 
+    app: edge-client
+spec:
+  containers:
+    - name: edge-client
+      image: darebeat/netcat:latest
+      imagePullPolicy: IfNotPresent
+      command: ['sh','-c','tail -f /entrypoint.sh']
+  
+       
