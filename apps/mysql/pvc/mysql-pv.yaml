@@ -12,7 +12,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/tmp/mysql/data"
+    path: "/tmp/k8s/pv/mysql/data"
     
 ---
 

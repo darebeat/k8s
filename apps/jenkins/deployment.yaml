@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,7 +7,7 @@ metadata:
   labels:
     app: jenkins-server
 spec:
-  replicas: 1
+  # replicas: 1
   selector:
     matchLabels:
       app: jenkins-server
@@ -15,15 +16,77 @@ spec:
       labels:
         app: jenkins-server
     spec:
+      terminationGracePeriodSeconds: 10
+      # serviceAccount: jenkins # 为方便本地运行,忽略rbac功能,有需要可以配置
       containers:
-        - name: jenkins
-          image: jenkins/jenkins:lts
-          ports:
-            - containerPort: 8080
-          volumeMounts:
-            - name: task-pv-storage
-              mountPath: "/tmp/jenkins"
-      volumes:
+      - name: jenkins-server
+        image: jenkins/jenkins:lts
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: web
+          protocol: TCP
+        - containerPort: 50000
+          name: agent
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          failureThreshold: 12
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          failureThreshold: 12
+        volumeMounts:
         - name: task-pv-storage
-          persistentVolumeClaim:
-            claimName: task-pv-claim
+          subPath: jenkins
+          mountPath: /var/jenkins_home
+        env:
+        - name: LIMITS_MEMORY
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
+              divisor: 1Mi
+        - name: JAVA_OPTS
+          value: -Xmx$(LIMITS_MEMORY)m -XshowSettings:vm -Dhudson.slaves.NodeProvisioner.initialDelay=0 -Dhudson.slaves.NodeProvisioner.MARGIN=50 -Dhudson.slaves.NodeProvisioner.MARGIN0=0.85 -Duser.timezone=Asia/Shanghai
+      # securityContext:
+      #   fsGroup: 1000
+      volumes:
+      - name: task-pv-storage
+        persistentVolumeClaim:
+          claimName: task-pv-claim
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-server
+  namespace: tools
+  labels:
+    app: jenkins-server
+spec:
+  selector:
+    app: jenkins-server
+  type: NodePort
+  ports:
+  - name: web
+    port: 8080
+    targetPort: web
+    nodePort: 30002
+  - name: agent # 这个端口主要是用于 Jenkins 的 master 和 slave 之间通信使用的
+    port: 50000
+    targetPort: agent
