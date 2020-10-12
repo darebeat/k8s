@@ -18,4 +18,7 @@ for i in 0 1 2;
     echo "The Server is: zk-$i"; 
     kubectl exec zk-$i -n tools zkServer.sh status;
   done
+
+# 停止
+kubectl delete -f zk.yaml
 ```

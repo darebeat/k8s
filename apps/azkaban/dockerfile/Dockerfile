@@ -1,6 +1,6 @@
 FROM openjdk:8u252-jre
 
-MAINTAINER zang
+MAINTAINER darebeat
 
 # debian：buster(10)
 RUN echo "deb http://mirrors.aliyun.com/debian/ buster main non-free contrib" > /etc/apt/sources.list \

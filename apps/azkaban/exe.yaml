@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: azkaban-exe
+  namespace: tools
+spec:
+  serviceName: "azkaban-exe"
+  selector:
+    matchLabels:
+      app: azkaban
+      deploy: exe
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: azkaban
+        deploy: exe
+    spec:
+      terminationGracePeriodSeconds: 20
+      containers:
+        - name: azkaban
+          image: darebeat/azkaban
+          imagePullPolicy: IfNotPresent
+          #command: ['bash','-c','sleep 1h']
+          args: ["exe"]
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/bash
+                  - -c
+                  - active-exe.sh
+                  #- curl "http://`hostname -A|awk '$1=$1'`:12321/executor?action=activate"
+            preStop:
+              exec:
+                command: 
+                  #- mysql -u${MYSQL_USER_NAME} -p${MYSQL_USER_PASSWORD} -h${MYSQL_HOST} ${MYSQL_DB} -e "SELECT * FROM executors" 
+                  - /bin/bash
+                  - -c 
+                  - mysql -u${MYSQL_USER_NAME} -p${MYSQL_USER_PASSWORD} -h${MYSQL_HOST} ${MYSQL_DB} -e "UPDATE executors SET active=0 WHERE host='`hostname -A`'"
+          env:
+            - name: MYSQL_HOST
+              value: azkaban-mysql
+            - name: MYSQL_DB
+              value: azkaban
+            - name: MYSQL_USER_NAME
+              value: azkaban
+            - name: MYSQL_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: user-password
+          volumeMounts:
+            - name: config
+              mountPath: /opt/azkaban/conf/
+      volumes:
+        - name: config
+          configMap:
+            name: azkaban-exe-config
+            items:
+              - key: azkaban-exe.properties
+                path: azkaban-exe.properties
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: azkaban-exe
+  namespace: tools
+spec:
+  selector:
+    app: azkaban
+    deploy: exe
+  clusterIP: None
+  ports:
+    - port: 12321
+      targetPort: 12321
