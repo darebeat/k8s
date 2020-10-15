@@ -152,7 +152,7 @@ spec:
     protocol: TCP
     targetPort: 3306
     name: http
-    nodePort: 32002
+    nodePort: 30001
   selector:
     type: local
     deploy: mysql

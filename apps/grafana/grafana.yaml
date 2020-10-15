@@ -86,5 +86,6 @@ spec:
     port: 3000
     protocol: TCP
     targetPort: web
+    nodePort: 30100
   selector:
     app: grafana
