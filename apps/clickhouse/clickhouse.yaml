@@ -1,0 +1,145 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init
+  namespace: tools
+data: {}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: tools
+data:
+  users.xml: |
+    <?xml version="1.0"?>
+    <yandex>
+        <profiles>
+            <default>
+                <max_memory_usage>10000000000</max_memory_usage>
+                <use_uncompressed_cache>0</use_uncompressed_cache>
+                <load_balancing>random</load_balancing>
+            </default>
+            <readonly>
+                <readonly>1</readonly>
+            </readonly>
+        </profiles>
+        <quotas>
+            <default>
+                <interval>
+                    <duration>3600</duration>
+                    <queries>0</queries>
+                    <errors>0</errors>
+                    <result_rows>0</result_rows>
+                    <read_rows>0</read_rows>
+                    <execution_time>0</execution_time>
+                </interval>
+            </default>
+        </quotas>
+    </yandex>
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: users
+  namespace: tools
+stringData:
+  clickhouse.xml: |
+    <yandex>
+        <users>
+          <clickhouse>
+              <profile>default</profile>
+                <networks>
+                      <ip>::/0</ip>
+                </networks>
+              <password_sha256_hex>7e099f39b84ea79559b3e85ea046804e63725fd1f46b37f281276aae20f86dc3</password_sha256_hex>
+              <quota>default</quota>
+          </clickhouse>
+        </users>
+    </yandex>
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: clickhouse
+  namespace: tools
+spec:
+  selector:
+    matchLabels:
+      app: clickhouse
+  serviceName: clickhouse
+  template:
+    metadata:
+      labels:
+        app: clickhouse
+    spec:
+      volumes:
+        - name: init
+          configMap:
+            name: init
+        - name: config
+          configMap:
+            name: config
+        - name: users
+          secret:
+            secretName: users
+      containers:
+      - name: clickhouse
+        image: yandex/clickhouse-server:20.6.8
+        ports:
+          - containerPort: 8123
+          - containerPort: 9000
+        volumeMounts:
+          - name: init
+            mountPath: /docker-entrypoint-initdb.d
+          - name: config
+            mountPath: /etc/clickhouse-server/users.xml
+            subPath: users.xml
+          - name: users
+            mountPath: /etc/clickhouse-server/users.d
+          - name: data
+            mountPath: /var/lib/clickhouse
+          - name: logs
+            mountPath: /var/log/clickhouse-server
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        namespace: tools
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+    - metadata:
+        name: logs
+        namespace: tools
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+  namespace: tools
+spec:
+  selector:
+    app: clickhouse
+  # type: NodePort
+  ports:
+    - port: 8123
+      name: http
+    - port: 9000
+      name: native

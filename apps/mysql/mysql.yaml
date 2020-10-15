@@ -1,0 +1,159 @@
+# mysql-data-pv
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-data-pv
+  namespace: tools
+  labels:
+    type: local
+    deploy: mysql
+    volume: data
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/k8s/pv/mysql/data"
+
+---
+
+# mysql-data-pvc
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data-pvc
+  namespace: tools
+spec:
+  selector:
+    matchLabels:
+      type: local
+      deploy: mysql
+      volume: data
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+
+# mysql-log-pv
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-log-pv
+  namespace: tools
+  labels:
+    type: local
+    deploy: mysql
+    volume: logs
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 50Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /tmp/k8s/pv/mysql/logs
+
+---
+
+# mysql-log-pvc
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-log-pvc
+  namespace: tools
+spec:
+  selector:
+    matchLabels:
+      type: local
+      deploy: mysql
+      volume: logs
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: tools
+  labels:
+    type: local
+    deploy: mysql
+spec:
+  selector:
+    matchLabels:
+      type: local
+      deploy: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        type: local
+        deploy: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: mysql
+            - name: MYSQL_USER
+              value: darebeat
+            - name: MYSQL_PASSWORD
+              value: mydbsys
+            - name: MYSQL_DATABASE
+              value: test
+          ports:
+            - containerPort: 3306
+              name: mysql
+          args: 
+            [
+              "--default-authentication-plugin=mysql_native_password",
+              "--character-set-server=utf8mb4",
+              "--collation-server=utf8mb4_general_ci"
+            ] 
+          volumeMounts:
+            - name: mysql-data-storage
+              mountPath: /var/lib/mysql
+            - name: mysql-log-storage
+              mountPath: /var/log/mysql
+      volumes:
+        - name: mysql-data-storage
+          persistentVolumeClaim:
+            claimName: mysql-data-pvc
+        - name: mysql-log-storage
+          persistentVolumeClaim:
+            claimName: mysql-log-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: tools
+spec:
+  type: NodePort
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+    name: http
+    nodePort: 32002
+  selector:
+    type: local
+    deploy: mysql
+  
