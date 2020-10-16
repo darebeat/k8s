@@ -4,6 +4,8 @@
 
 ```sh
 # 设置系统主机名以及 Host 文件的相互解析
+sudo hostnamectl set-hostname k8s.docker.internal
+
 cat >> /etc/hosts << EOF
 k8s.docker.internal
 EOF
@@ -159,13 +161,13 @@ kubectl get pod --all-namespaces -o wide
 
 # master node参与工作负载
 ## 查看污点标记 node-role.kubernetes.io/master:NoSchedule
-kubectl describe node localhost.localdomain |grep Taint
+kubectl describe node k8s.docker.internal |grep Taint
 
 ## 执行命令去除标记
-kubectl taint nodes localhost.localdomain node-role.kubernetes.io/master:NoSchedule-
+kubectl taint nodes k8s.docker.internal node-role.kubernetes.io/master:NoSchedule-
 
 # 检测集群状态
-kubectl get cs
+kubectl get cs 
 
 # kube-proxy开启ipvs
 ## 修改ConfigMap的kube-system/kube-proxy中的config.conf，把 mode: "" 改为mode: “ipvs" 保存退出即可
