@@ -153,23 +153,31 @@ kubectl apply -f kube-flannel.yaml
 kubeadm reset
 rm -rf $HOME/.kube
 
-# 检测集群状态
-kubectl get cs
 
 # 确保所有的Pod都处于Running状态
 kubectl get pod --all-namespaces -o wide
 
+# master node参与工作负载
+## 查看污点标记 node-role.kubernetes.io/master:NoSchedule
+kubectl describe node localhost.localdomain |grep Taint
+
+## 执行命令去除标记
+kubectl taint nodes localhost.localdomain node-role.kubernetes.io/master:NoSchedule-
+
+# 检测集群状态
+kubectl get cs
+
 # kube-proxy开启ipvs
-# 修改ConfigMap的kube-system/kube-proxy中的config.conf，把 mode: "" 改为mode: “ipvs" 保存退出即可
+## 修改ConfigMap的kube-system/kube-proxy中的config.conf，把 mode: "" 改为mode: “ipvs" 保存退出即可
 kubectl edit cm kube-proxy -n kube-system
 
 
-# 删除之前的proxy pod
+## 删除之前的proxy pod
 kubectl get pod -n kube-system |grep kube-proxy |awk '{system("kubectl delete pod "$1" -n kube-system")}'
 
-# 查看proxy运行状态
+## 查看proxy运行状态
 kubectl get pod -n kube-system |grep kube-proxy 
 
-#查看日志,如果有 `Using ipvs Proxier.` 说明kube-proxy的ipvs 开启成功!
+## 查看日志,如果有 `Using ipvs Proxier.` 说明kube-proxy的ipvs 开启成功!
 kubectl logs `kubectl get pod -n kube-system |grep kube-proxy|awk '{print $1}'` -n kube-system | grep ipvs
 ```
