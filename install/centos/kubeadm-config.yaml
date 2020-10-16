@@ -1,0 +1,6 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: v1.19.2
+imageRepository: k8s.gcr.io
+advertiseAddress: k8s.docker.internal
+pod-network-cidr: 10.244.0.0/16
