@@ -104,7 +104,7 @@ spec:
     port: 6125
   - name: ui
     port: 8081
-    nodePort: 30001
+    nodePort: 30081
   selector:
     app: flink
     component: jobmanager
